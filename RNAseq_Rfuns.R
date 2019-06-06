@@ -27,7 +27,7 @@ library(Glimma)
 library(limma)
 
 load.counts.tabular <- function(from){
-  # from - directory path, e.g. "/home/vendula/Documents/Projects/FacialPalsy/"
+  # from - directory path
   setwd(from)
   list.filenames = list.files(pattern=".tabular$")
   df.CountMatrix = read.table(list.filenames[1], header=TRUE)
@@ -44,6 +44,8 @@ load.counts.tabular <- function(from){
 volcano.plot.single <- function(result, FCthres, pvalthres, where.to, name){
   # FCthres - Fold Chance threshold
   # pvalthres - adjusted pvalue threshold
+  # where.to - path for the output
+  # name - name of the output file
   descr = mcols(result)
   comparison = substr(descr$description[3], start=17, stop=str_length(descr$description[3]))
   res = as.data.frame(result)
@@ -78,6 +80,10 @@ volcano.plot.single <- function(result, FCthres, pvalthres, where.to, name){
 
 
 volcano.plot.EnhancedVolcano <- function(DESeqDataSet, annotated, res1, res2, res3, where.to, ...){
+  # DESeqDataSet - DESeqDataSet dataset
+  # annotated - GeneID annotated to Ensembl names
+  # res1,2,3 - results if three pairwise comparisons from the results() function
+  # where.to - path for the output
   groups = levels(DESeqDataSet$condition)
   group.name=as.character(design(DESeqDataSet))[2]
   
@@ -139,6 +145,10 @@ volcano.plot.EnhancedVolcano <- function(DESeqDataSet, annotated, res1, res2, re
 
 
 venn.diagram.2or3groups <- function(CountMatrix, samples, where.to){
+    # Count Matrix - count matrix
+    # samples - data frame of ladeIDs, patientIDs, labels (e.g.diagnosis)
+    # where.to - path for the output
+  
     # replace all 0s with NAs (so these genes are considered as not present = not expressed)
     df = CountMatrix
     df[] <- replace(row.names(df)[row(df)], !df, 0)
@@ -189,6 +199,10 @@ venn.diagram.2or3groups <- function(CountMatrix, samples, where.to){
 
 
 PCA.plot.ZenLab <- function(normalized, samples, name, where.to){
+  # normalized - DESeqTransform object of normalized counts
+  # samples - data frame of ladeIDs, patientIDs, labels (e.g.diagnosis)
+  # name - name of the resulting plot
+  # where.to - path for the output
     PCs = plotPCA(normalized, intgroup=c("dg"), returnData=TRUE)
     colnames(df.samples)[1]="laneID"
     colnames(PCs)[ncol(PCs)]="laneID"
@@ -206,10 +220,12 @@ PCA.plot.ZenLab <- function(normalized, samples, name, where.to){
 
 
 heatmap.gene.counts <- function(DESeqDataSet, normalized, how.many, annotated, name, where.to){
-  # DESeqDataSet: DESeqDataSet dataset of raw counts
-  # normalized: DESeqTransform object of normalized counts
-  # annotated: GeneID annotated to Ensembl names
-  # filename: path where to save the plot
+  # DESeqDataSet - DESeqDataSet dataset of raw counts
+  # normalized - DESeqTransform object of normalized counts
+  # how.many - how many top genes to include in the plot
+  # annotated - GeneID annotated to Ensembl names
+  # name - name of the resulting plot
+  # where.to - path for the output
   select <- order(rowMeans(counts(DESeqDataSet,normalized=TRUE)),
                   decreasing=TRUE)[1:how.many]
   val.mat = assay(normalized)[select,]
@@ -252,6 +268,9 @@ heatmap.gene.counts <- function(DESeqDataSet, normalized, how.many, annotated, n
 
 
 heatmap.sample2sample.dist <- function(normalized, name, where.to){  
+  # normalized - DESeqTransform object of normalized counts
+  # name - name of the resulting plot
+  # where.to - path for the output
   sampleDists <- dist(t(assay(normalized)))
   sampleDistMatrix <- as.matrix(sampleDists)
   rownames(sampleDistMatrix) <- normalized$dg
@@ -266,7 +285,13 @@ heatmap.sample2sample.dist <- function(normalized, name, where.to){
   dev.off()
 }
 
-heatmap.gene.deviations <- function(DESeqDataSet, normalized, how.many, annotated, name, where.to){  # unfinished
+heatmap.gene.deviations <- function(DESeqDataSet, normalized, how.many, annotated, name, where.to){
+  # DESeqDataSet - DESeqDataSet dataset of raw counts
+  # normalized - DESeqTransform object of normalized counts
+  # how.many - how many top genes to include in the plot
+  # annotated - GeneID annotated to Ensembl names
+  # name - name of the resulting plot
+  # where.to - path for the output
   topVarGenes <- head(order(-rowVars(assay(normalized))), how.many) # top genes with the highest variance (in counts) across samples
   mat <- assay(normalized)[ topVarGenes, ]
   mat <- mat - rowMeans(mat)
